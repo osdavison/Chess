@@ -55,7 +55,7 @@ class App extends React.Component {
       });
     }, 2000);
 
-    this.chessboard.enableMoveInput(this.handleMoveInput);
+    this.updateGameState();
   }
 
   updateGameState = () => {
@@ -72,6 +72,11 @@ class App extends React.Component {
     if (autoScroll) {
       history.scrollTop = history.scrollHeight;
     }
+
+    this.chessboard.enableMoveInput(
+      this.handleMoveInput,
+      this.chess.turn() === "b" ? COLOR.black : COLOR.white
+    );
   };
 
   getMoves = () =>
@@ -98,6 +103,10 @@ class App extends React.Component {
           square: event.square,
           verbose: true
         });
+
+        if (!possibleMoves.length) {
+          return false;
+        }
 
         possibleMoves.forEach(move => {
           this.chessboard.addMarker(move.to);
@@ -137,7 +146,7 @@ class App extends React.Component {
               width: "100px"
             }}
           >
-            <h1>ShadFish</h1>
+            <h1>Chess</h1>
             <div
               id="history"
               style={{
