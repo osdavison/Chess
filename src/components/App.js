@@ -8,7 +8,7 @@ import {
 import Chess from "chess.js";
 import axios from "axios";
 
-const boardHeight = 400;
+const boardSize = 400;
 
 class App extends React.Component {
   constructor(props) {
@@ -54,7 +54,7 @@ class App extends React.Component {
     var history = document.getElementById("history");
 
     // Only auto-scroll to the bottom if the list is already at the bottom before adding another move
-    var autoScroll = history.scrollTop === history.scrollHeight - boardHeight;
+    var autoScroll = history.scrollTop === history.scrollHeight - boardSize;
 
     this.setState({
       gameOver: this.chess.game_over(),
@@ -80,6 +80,9 @@ class App extends React.Component {
 
   resetMoves = () =>
     axios.post("/api/moves/reset").then(this.handleMoveResponse);
+
+  setEndgame = () =>
+    axios.post("/api/moves/endgame").then(this.handleMoveResponse);
 
   handleMoveResponse = response => {
     var moves = response.data.moves.split(" ");
@@ -134,13 +137,13 @@ class App extends React.Component {
 
         this.moves.push(moveResult.san);
         this.postMoves();
-
         this.updateGameState();
 
         return true;
       case INPUT_EVENT_TYPE.moveCanceled:
         this.chessboard.removeMarkers(null, null);
-        break;
+
+        return false;
     }
   };
 
@@ -148,17 +151,12 @@ class App extends React.Component {
     try {
       return (
         <div className="App">
-          <div
-            style={{
-              float: "left",
-              width: "100px"
-            }}
-          >
+          <div style={{ float: "left", width: "100px" }}>
             <h1>Chess</h1>
             <div
               id="history"
               style={{
-                height: `${boardHeight}px`,
+                height: `${boardSize}px`,
                 overflow: "hidden",
                 overflowY: "scroll",
                 border: "ridge"
@@ -174,21 +172,20 @@ class App extends React.Component {
           </div>
           <div style={{ float: "left", marginLeft: "20px" }}>
             {this.state.gameOver && (
-              <h1
-                style={{ color: "red", float: "right", cursor: "pointer" }}
-                onClick={this.resetMoves}
-              >
-                Game Over!
-              </h1>
+              <h1 style={{ color: "red", float: "right" }}>Game Over!</h1>
             )}
             <div
               id="chessboard-container"
               style={{
-                height: `${boardHeight}px`,
-                width: `${boardHeight}px`,
+                height: `${boardSize}px`,
+                width: `${boardSize}px`,
                 marginTop: !this.state.gameOver ? "86px" : void 0
               }}
             />
+          </div>
+          <div>
+            <button onClick={this.setEndgame}>Endgame</button>
+            <button onClick={this.resetMoves}>Reset</button>
           </div>
         </div>
       );
