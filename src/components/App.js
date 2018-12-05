@@ -41,18 +41,10 @@ class App extends React.Component {
       }
     );
 
-    this.getMoves().then(moves => {
-      this.moves = moves;
-      this.applyMoves(moves);
-    });
+    this.getMoves();
 
     setInterval(() => {
-      this.getMoves().then(moves => {
-        if (this.moves !== moves) {
-          this.moves = moves;
-          this.applyMoves(moves);
-        }
-      });
+      this.getMoves();
     }, 2000);
 
     this.updateGameState();
@@ -79,13 +71,29 @@ class App extends React.Component {
     );
   };
 
-  getMoves = () =>
-    axios.get("/api/moves").then(response => response.data.moves.split(" "));
+  getMoves = () => axios.get("/api/moves").then(this.handleMoveResponse);
 
-  applyMoves = moves => {
+  postMoves = () =>
+    axios
+      .post("/api/moves", { moves: this.moves.join(" ") })
+      .then(this.handleMoveResponse);
+
+  resetMoves = () =>
+    axios.post("/api/moves/reset").then(this.handleMoveResponse);
+
+  handleMoveResponse = response => {
+    var moves = response.data.moves.split(" ");
+
+    if (this.moves !== moves) {
+      this.moves = moves;
+      this.applyMoves();
+    }
+  };
+
+  applyMoves = () => {
     this.chess.reset();
 
-    moves.forEach(move => {
+    this.moves.forEach(move => {
       this.chess.move(move);
     });
 
@@ -125,7 +133,7 @@ class App extends React.Component {
         }
 
         this.moves.push(moveResult.san);
-        axios.post("/api/moves", { moves: this.moves.join(" ") });
+        this.postMoves();
 
         this.updateGameState();
 
@@ -166,7 +174,12 @@ class App extends React.Component {
           </div>
           <div style={{ float: "left", marginLeft: "20px" }}>
             {this.state.gameOver && (
-              <h1 style={{ color: "red", float: "right" }}>Game Over!</h1>
+              <h1
+                style={{ color: "red", float: "right", cursor: "pointer" }}
+                onClick={this.resetMoves}
+              >
+                Game Over!
+              </h1>
             )}
             <div
               id="chessboard-container"
